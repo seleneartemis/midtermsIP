@@ -1,7 +1,10 @@
+import javax.swing.JComponent;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.awt.Rectangle;
+
 
 public class Player {
 
@@ -13,9 +16,11 @@ public class Player {
 	// circle's position
 	public int x = 30;
 	public int y = 30;
-	
+	public int height;
+	public int width;
 
 	// animation states
+	public boolean isAttacking = false;
 	public int state = 0;
 	
 
@@ -44,8 +49,12 @@ public class Player {
 			e.printStackTrace();
 		}
 
-		int height = image.getHeight();
-		int width = image.getWidth() + 10;
+		height = image.getHeight();
+		width = image.getWidth() + 10;
+	}
+
+	public Rectangle playerBounds(){
+		return(new Rectangle (x, y, width, height));
 	}
 
 
@@ -83,6 +92,7 @@ public class Player {
 	public void attackAnimation(){
 		Thread thread1 = new Thread(new Runnable(){
 			public void run(){
+				isAttacking = true;
 				for(int ctr = 0; ctr < 5; ctr++){
 					try {
 						if(ctr==4){
@@ -104,6 +114,8 @@ public class Player {
 						e.printStackTrace();
 					}
 				}
+				draw.checkCollision();
+				isAttacking = false;
 			}
 		});
 		thread1.start();
@@ -137,8 +149,4 @@ public class Player {
 		reloadImage();
 		draw.repaint();
 	}
-	
-
-
-
 }

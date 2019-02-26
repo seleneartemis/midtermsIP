@@ -6,48 +6,118 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.util.Random;
+import java.util.ArrayList;
 
 public class Draw extends JComponent{
 
 	public Player player;
+	public BufferedImage image;
+	public BufferedImage backgroundImage;
+	public URL resource = getClass().getResource("run0.png");
 
-	private BufferedImage backgroundImage;
 
-	Monster monster1;
-	Monster monster2;
-	Monster monster3;	
-	Monster monster4;	
-	Monster monster5;
+	public int x = 300;
+	public int y = 300;
+	public int height = 0;
+	public int width = 0;
+
+	// animation states
+	public int state = 0;
+
+	// randomizer
+	public Random randomizer;
+
+	// enemy
+	public int enemyCount;
+	Monster[] monsters = new Monster[10];
+	public ArrayList<Monster> monsterlist = new ArrayList<>();
+
 
 	public Draw(){
-		monster1 = new Monster(100, 200);
-		monster2 = new Monster(300, 200);
-		monster3 = new Monster(400, 300);
-		monster4 = new Monster(100, 400);
-		monster5 = new Monster(500, 100);
 
-		player = new Player(-10, 520, this);
-
+		randomizer = new Random();
+		player = new Player (-10,530, this);
+		spawnEnemy();
+		
 		try{
+			image = ImageIO.read(resource);
 			backgroundImage = ImageIO.read(getClass().getResource("background.jpg"));
 		}
 		catch(IOException e){
 			e.printStackTrace();
 		}
+
+		height = image.getHeight();
+		width = image.getWidth();
+
+		startGame();
 	}
 
+	public void startGame(){
+		Thread gameThread = new Thread(new Runnable(){
+			public void run(){
+				while(true){
+					try{
+						for(int c = 0; c < monsterlist.size(); c++){
+							if(monsterlist.size()!= 0){
+								monsterlist.get(c).moveTo(player.x, player.y);
+								repaint();
+							}
+							if(monsterlist.get(c).life <= 0){
+								monsterlist.remove(c);
+				}
+						}
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+							e.printStackTrace();
+					}
+				}
+			}
+		});
+		gameThread.start();
+	}
+
+	public void spawnEnemy(){
+		if(enemyCount < 10){
+			int random = randomizer.nextInt(600);
+			if(random < 600 || random < 30){
+			monsters[enemyCount] = new Monster(random, 530, this);
+			monsterlist.add(monsters[enemyCount]);
+			enemyCount++;
+			}
+		}
+	}
+
+
+	public void checkCollision(){
+	 
+		for(int i=0; i < monsterlist.size(); i++){
+			if(player.isAttacking == true){
+				if(player.playerBounds().intersects(monsterlist.get(i).monsterBounds())){
+					monsterlist.get(i).life -= 10;
+
+			}
+		}
+	}
+}
 
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
 		g.setColor(Color.YELLOW);
 		g.drawImage(backgroundImage, 0, 0, this);
 		
-
-		g.drawImage(monster1.image, monster1.xPos, monster1.yPos, this);
-		g.drawImage(monster2.image, monster2.xPos, monster2.yPos, this);
-		g.drawImage(monster3.image, monster3.xPos, monster3.yPos, this);
-		g.drawImage(monster4.image, monster4.xPos, monster4.yPos, this);
-		g.drawImage(monster5.image, monster5.xPos, monster5.yPos, this);
 		g.drawImage(player.image, player.x, player.y, this);
+
+		for(int c = 0; c < monsterlist.size(); c++){
+			if(monsterlist.size() != 0){
+				g.drawImage(monsterlist.get(c).image, monsterlist.get(c).xPos, monsterlist.get(c).yPos, this);
+				g.setColor(Color.GREEN);
+				g.fillRect(monsterlist.get(c).xPos+7, monsterlist.get(c).yPos, monsterlist.get(c).life, 2);
+
+			}
+		}
+
 	}
-}
+
+}			
